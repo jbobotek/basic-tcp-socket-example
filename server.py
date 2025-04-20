@@ -9,7 +9,7 @@ class server_program():
     def __init__(self, host='127.0.0.1', port=12345):
         self.host = host
         self.port = port
-        self.log_loc = logging.basicConfig(filemode='a', filename="log.txt", level=logging.INFO)
+        self.log_loc = logging.basicConfig(filemode='a', filename="server_log.txt", level=logging.INFO)
 
     def handle_client(self, conn: socket.socket, addr):
         # Handles communication with a single client.
@@ -20,7 +20,7 @@ class server_program():
                 if not data:
                     break
                 logging.info(f"Received from {str(addr)}: {data.decode()}")
-                response = "ACK".encode() # f"Server received: {data.decode('utf-8')}\n".encode('utf-8')
+                response = data.decode().encode()
                 conn.sendall(response)
         except Exception as e:
             print(f"Error handling client {str(addr)}: {e}")
