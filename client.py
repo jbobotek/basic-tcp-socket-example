@@ -3,14 +3,24 @@ import time
 import unittest
 import server
 import logging
+import threading
+import os
 
+def compare_logs(client_log, server_log, lines=5) -> bool:
+    with open(client_log, 'r') as log1:
+        lines1 = log1.readlines()[-1 * lines:]
+    with open(server_log, 'r') as log2:
+        lines2 = log2.readlines()[-1 * lines:]
+    return lines1 == lines2
 
 def connect_and_send(freq, duration, message, host="127.0.0.1", port=12345):
-    log_loc = logging.basicConfig(filemode='a', filename="client_log.txt", level=logging.INFO)
+    log_loc = logging.getLogger("client_log")
+    log_loc.setLevel(logging.INFO)
+    log_loc.addHandler(logging.FileHandler("client_log.txt"))
     start = time.time()
     while start + duration > time.time():
         time.sleep(freq)
-        logging.info(send_message(host, port, message))
+        log_loc.info(send_message(host, port, message))
 
 # A "sender" component that emits a "heartbeat" message over a TCP socket on regular intervals.
 def send_message(host, port, message):
@@ -31,20 +41,29 @@ def send_message(host, port, message):
 class tester(unittest.TestCase):
     SERVER_HOST = "127.0.0.1"
     SERVER_PORT = 65432
+    client_file = "client_log.txt"
+    server_file = "server_log.txt"
 
     @classmethod
     def setUpClass(cls):
         """Start the test server before running any tests."""
-        cls.server_thread = threading.Thread(target=server.server_program.start_server, args=(cls.SERVER_HOST, cls.SERVER_PORT), daemon=True)
+        cls.server_instance = server.server_program(cls.SERVER_HOST, cls.SERVER_PORT)
+        cls.server_thread = threading.Thread(target=cls.server_instance.start_server, daemon=True)
         cls.server_thread.start()
         time.sleep(0.1)
 
-    def test_short_ascii_message_stability(self):
+    def test_short_message_stability(self):
         """Tests sending a short ASCII message."""
         message = "hello"
         connect_and_send(1, 5, message, self.SERVER_HOST, self.SERVER_PORT)
-        self.assertEqual(response, f"Server received: {message}")
-    
+        self.assertTrue(compare_logs(self.client_file, self.server_file))
+
+    def test_long_message_stability(self):
+        """Tests sending a long ASCII message."""
+        message = "hello"*500
+        connect_and_send(1, 5, message, self.SERVER_HOST, self.SERVER_PORT)
+        self.assertTrue(compare_logs(self.client_file, self.server_file))
 
 if __name__ == "__main__":
-    connect_and_send(1, 5, "hello")
+    # connect_and_send(1, 5, "hello")
+    unittest.main()
