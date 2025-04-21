@@ -9,12 +9,13 @@ class server_program():
     def __init__(self, host='127.0.0.1', port=12345):
         self.host = host
         self.port = port
+        # logging setup
         self.log_loc = logging.getLogger("server_log")
         self.log_loc.setLevel(logging.INFO)
         self.log_loc.addHandler(logging.FileHandler("server_log.txt"))
 
     def handle_client(self, conn: socket.socket, addr):
-        # Handles communication with a single client.
+        """Handles communication with a single client."""
         print(f"Connection by {str(addr)}")
         try:
             while True:
@@ -63,7 +64,6 @@ if __name__ == "__main__":
 
     print("Server started in the background.")
     input("Press Enter to close the server...\n")
-    # server_instance.stop()
 
     # No explicit closing needed here because of server_thread.daemon = True
-    print("Server shutting down (implicitly).")
+    print("Server shutting down.")

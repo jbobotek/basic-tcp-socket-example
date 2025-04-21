@@ -4,15 +4,17 @@ import unittest
 import server
 import logging
 import threading
-import os
+
 
 def compare_logs(client_log, server_log, lines=5) -> bool:
+    """Compares the last lines in two logs."""
     with open(client_log, 'r') as log1:
         lines1 = log1.readlines()[-1 * lines:]
     with open(server_log, 'r') as log2:
         lines2 = log2.readlines()[-1 * lines:]
     return lines1 == lines2
 
+# A "sender" component that emits a "heartbeat" message over a TCP socket on regular intervals.
 def connect_and_send(freq, duration, message, host="127.0.0.1", port=12345):
     log_loc = logging.getLogger("client_log")
     log_loc.setLevel(logging.INFO)
@@ -22,7 +24,6 @@ def connect_and_send(freq, duration, message, host="127.0.0.1", port=12345):
         time.sleep(freq)
         log_loc.info(send_message(host, port, message))
 
-# A "sender" component that emits a "heartbeat" message over a TCP socket on regular intervals.
 def send_message(host, port, message):
     """Sends a message to the server and prints the response."""
     try:
